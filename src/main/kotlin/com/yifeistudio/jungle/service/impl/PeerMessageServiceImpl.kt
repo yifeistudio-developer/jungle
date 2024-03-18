@@ -3,7 +3,11 @@ package com.yifeistudio.jungle.service.impl
 import com.yifeistudio.jungle.service.PeerMessageService
 import lombok.extern.slf4j.Slf4j
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.socket.WebSocketHandler
+import org.springframework.web.reactive.socket.WebSocketSession
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
+import reactor.core.publisher.Mono
+import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -16,9 +20,15 @@ class PeerMessageServiceImpl : PeerMessageService {
     /**
      * 伙伴关系缓存
      */
-    private val peerClientCache: Map<String, ReactorNettyWebSocketClient> = ConcurrentHashMap()
+    private val peerSessionCache: MutableMap<String, WebSocketSession> = ConcurrentHashMap()
 
-
-
+    private fun connectPeer(host: String) {
+        val client = ReactorNettyWebSocketClient()
+        val uri = URI("ws://$host:8080/user-endpoint/message")
+        client.execute(uri, WebSocketHandler { session: WebSocketSession ->
+            peerSessionCache.put(host, session)
+            Mono.empty()
+        })
+    }
 
 }

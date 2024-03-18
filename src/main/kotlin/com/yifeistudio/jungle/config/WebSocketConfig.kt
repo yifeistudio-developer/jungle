@@ -22,6 +22,9 @@ class WebSocketConfig {
     @Resource
     private lateinit var peerMessageService: PeerMessageService
 
+    /**
+     * 注册 WebSocket Handler Mapping
+     */
     @Bean
     fun handlerMapping(): HandlerMapping {
         val handlerMap = mapOf(
