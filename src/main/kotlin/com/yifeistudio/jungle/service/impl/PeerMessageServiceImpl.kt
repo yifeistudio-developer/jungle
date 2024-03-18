@@ -17,16 +17,18 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class PeerMessageServiceImpl : PeerMessageService {
 
+    private val client = ReactorNettyWebSocketClient()
+
     /**
      * 伙伴关系缓存
      */
     private val peerSessionCache: MutableMap<String, WebSocketSession> = ConcurrentHashMap()
 
     private fun connectPeer(host: String) {
-        val client = ReactorNettyWebSocketClient()
+
         val uri = URI("ws://$host:8080/user-endpoint/message")
         client.execute(uri, WebSocketHandler { session: WebSocketSession ->
-            peerSessionCache.put(host, session)
+            peerSessionCache[host] = session
             Mono.empty()
         })
     }
