@@ -18,3 +18,5 @@ spring:
   config:
     activate:
       on-profile: dev
+jungle:
+  ip-address: 192.168.18.207

@@ -1,6 +1,8 @@
 package com.yifeistudio.jungle.service.impl
 
 import com.yifeistudio.jungle.service.PeerMessageService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
@@ -14,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @Service
 class PeerMessageServiceImpl : PeerMessageService {
+
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     private val client = ReactorNettyWebSocketClient()
 

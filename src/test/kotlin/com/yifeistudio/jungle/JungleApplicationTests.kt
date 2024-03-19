@@ -1,29 +1,26 @@
 package com.yifeistudio.jungle
 
+import com.yifeistudio.jungle.config.JungleProperties
+import jakarta.annotation.Resource
 import org.junit.jupiter.api.Test
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
-import reactor.core.publisher.Mono
-import java.net.URI
+
 
 @SpringBootTest
 class JungleApplicationTests {
 
-	@Test
-	fun contextLoads() {
-	}
+	private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
+	@Resource
+	private lateinit var jungleProperties: JungleProperties
 
 	@Test
-	fun websocketUserEndpointTest() {
-		val client = ReactorNettyWebSocketClient()
-		val url = URI("ws://localhost:8080/user-endpoint/message")
-		client.execute(url) {
-			session ->
-			session.send(Mono.just(session.textMessage("hello world")))
-				.thenMany(session.receive())
-				.doOnNext { message -> println(message.payloadAsText) }
-				.then()
-		}.block()
+	fun contextLoads() {
+		logger.info("load jungle configuration {}", jungleProperties)
 	}
+
+
 
 }
