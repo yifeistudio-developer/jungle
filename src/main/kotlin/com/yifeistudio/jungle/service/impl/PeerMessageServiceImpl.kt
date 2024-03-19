@@ -1,7 +1,6 @@
 package com.yifeistudio.jungle.service.impl
 
 import com.yifeistudio.jungle.service.PeerMessageService
-import lombok.extern.slf4j.Slf4j
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
@@ -13,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * 伙伴管理服务
  */
-@Slf4j
 @Service
 class PeerMessageServiceImpl : PeerMessageService {
 

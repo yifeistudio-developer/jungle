@@ -27,16 +27,20 @@ repositories {
 	mavenCentral()
 }
 
+val mybatisVersion = "3.5.5"
+val spaceVersion = "3.5.3.2"
+
 dependencies {
-	implementation("com.yifeistudio:space-unit:2.0.1-RELEASE")
+	implementation("com.baomidou:mybatis-plus-boot-starter:${mybatisVersion}")
+	implementation("com.yifeistudio:space-unit:${spaceVersion}")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	compileOnly("org.projectlombok:lombok")
-	annotationProcessor("org.projectlombok:lombok")
+	runtimeOnly("com.h2database:h2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")
 }

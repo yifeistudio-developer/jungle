@@ -1,13 +1,11 @@
 package com.yifeistudio.jungle.adapter.impl
 
 import com.yifeistudio.jungle.adapter.RegistrationManager
-import lombok.extern.slf4j.Slf4j
 import org.springframework.stereotype.Component
 
 /**
  * 使用Redis实现节点及用户关系注册中心
  */
-@Slf4j
 @Component
 class RedisRegistrationManager : RegistrationManager {
 
