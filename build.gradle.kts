@@ -28,6 +28,7 @@ repositories {
 }
 
 dependencies {
+	implementation("com.yifeistudio:space-unit:2.0.1-RELEASE")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
