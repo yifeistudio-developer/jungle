@@ -8,7 +8,7 @@ class UtilTests {
 
     @Test
     fun localIpAddressTest() {
-        val localIpAddress = Networks.localIpAddress()
+        val localIpAddress = Networks.localIpAddress("192.168.18")
         println(localIpAddress)
     }
 }

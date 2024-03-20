@@ -7,9 +7,4 @@ class EventDO {
 
     var id: Long? = null
 
-
-
-
-
-
 }

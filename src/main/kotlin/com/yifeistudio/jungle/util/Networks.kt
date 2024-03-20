@@ -8,7 +8,7 @@ object Networks {
     /**
      * 获取本机IP地址
      */
-    fun localIpAddress(): String {
+    fun localIpAddress(ipPrefer: String = ""): String {
         val networkInterfaces = NetworkInterface.getNetworkInterfaces()
         while (networkInterfaces.hasMoreElements()) {
             val networkInterface = networkInterfaces.nextElement()
@@ -16,7 +16,13 @@ object Networks {
             while (inetAddresses.hasMoreElements()) {
                 val inetAddress = inetAddresses.nextElement()
                 if (!inetAddress.isLoopbackAddress && inetAddress is Inet4Address) {
-                    return inetAddress.hostAddress
+                    val hostAddress = inetAddress.hostAddress
+                    if (ipPrefer == "") {
+                        return hostAddress
+                    }
+                    if (hostAddress.startsWith(ipPrefer)) {
+                        return hostAddress
+                    }
                 }
             }
         }

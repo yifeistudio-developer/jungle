@@ -1,14 +1,13 @@
 package com.yifeistudio.jungle.service.impl
 
+import com.yifeistudio.jungle.adapter.impl.RedisRegistrationManager
 import com.yifeistudio.jungle.service.PeerMessageService
+import jakarta.annotation.Resource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
-import reactor.core.publisher.Mono
-import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -17,22 +16,22 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class PeerMessageServiceImpl : PeerMessageService {
 
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-
     private val client = ReactorNettyWebSocketClient()
+
+    @Resource
+    private lateinit var registrationManager: RedisRegistrationManager
+
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * 伙伴关系缓存
      */
     private val peerSessionCache: MutableMap<String, WebSocketSession> = ConcurrentHashMap()
 
-    private fun connectPeer(host: String) {
+    private fun connectPeer(host: String, port: Int) {
 
-        val uri = URI("ws://$host:8080/user-endpoint/message")
-        client.execute(uri, WebSocketHandler { session: WebSocketSession ->
-            peerSessionCache[host] = session
-            Mono.empty()
-        })
     }
+
+
 
 }

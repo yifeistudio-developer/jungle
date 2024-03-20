@@ -3,6 +3,11 @@ spring:
     name: jungle
   profiles:
     default: dev
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+server:
+  port: 0
+  shutdown: graceful
 
 ---
 spring:
@@ -19,4 +24,6 @@ spring:
     activate:
       on-profile: dev
 jungle:
-  ip-address: 192.168.18.207
+  mode: cluster
+  cluster:
+    ip-prefer: 192.168.18

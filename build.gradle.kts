@@ -28,7 +28,7 @@ repositories {
 }
 
 val mybatisVersion = "3.5.5"
-val spaceVersion = "3.5.3.2"
+val spaceVersion = "2.0.1-RELEASE"
 
 dependencies {
 	implementation("com.baomidou:mybatis-plus-boot-starter:${mybatisVersion}")

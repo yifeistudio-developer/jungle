@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class JungleApplication
 
 fun main(args: Array<String>) {
-	runApplication<JungleApplication>(*args)
+	runApplication<JungleApplication>(*args).registerShutdownHook()
 }
