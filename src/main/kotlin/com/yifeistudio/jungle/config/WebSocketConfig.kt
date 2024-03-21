@@ -2,7 +2,7 @@ package com.yifeistudio.jungle.config
 
 import com.yifeistudio.jungle.handler.PeerMessageHandler
 import com.yifeistudio.jungle.handler.UserMessageHandler
-import com.yifeistudio.jungle.service.PeerMessageService
+import com.yifeistudio.jungle.service.PeerService
 import com.yifeistudio.jungle.service.UserMessageService
 import jakarta.annotation.Resource
 import org.slf4j.Logger
@@ -23,7 +23,7 @@ class WebSocketConfig {
     private lateinit var userMessageService: UserMessageService
 
     @Resource
-    private lateinit var peerMessageService: PeerMessageService
+    private lateinit var peerMessageService: PeerService
 
     /**
      * 注册 WebSocket Handler Mapping

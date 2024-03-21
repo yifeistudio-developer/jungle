@@ -52,14 +52,12 @@ class RedisRegistrationManager : RegistrationManager {
         val connectionFactory = redisTemplate.connectionFactory
         if (connectionFactory is LettuceConnectionFactory) {
             if (connectionFactory.isRunning) {
-                redisTemplate.opsForSet()
-                    .remove(activePeerCacheKey, marker)
+                redisTemplate.opsForSet().remove(activePeerCacheKey, marker)
                 return
             }
             try {
                 connectionFactory.start()
-                redisTemplate.opsForSet()
-                    .remove(activePeerCacheKey, marker)
+                redisTemplate.opsForSet().remove(activePeerCacheKey, marker)
             } finally {
                 connectionFactory.destroy()
             }

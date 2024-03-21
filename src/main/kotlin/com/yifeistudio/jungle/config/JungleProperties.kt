@@ -16,6 +16,9 @@ class JungleProperties {
      */
     var cluster: Cluster = Cluster()
 
+    /**
+     * 集群模式配置
+     */
     class Cluster {
 
         /**
@@ -23,6 +26,10 @@ class JungleProperties {
          */
         var ipPrefer: String = ""
 
+        /**
+         * 是否保持互联
+         */
+        var keepConnected: Boolean = true
 
     }
 
