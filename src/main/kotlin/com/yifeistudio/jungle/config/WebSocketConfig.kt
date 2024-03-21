@@ -2,8 +2,8 @@ package com.yifeistudio.jungle.config
 
 import com.yifeistudio.jungle.handler.PeerMessageHandler
 import com.yifeistudio.jungle.handler.UserMessageHandler
+import com.yifeistudio.jungle.service.MessageService
 import com.yifeistudio.jungle.service.PeerService
-import com.yifeistudio.jungle.service.UserMessageService
 import jakarta.annotation.Resource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -20,10 +20,10 @@ class WebSocketConfig {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     @Resource
-    private lateinit var userMessageService: UserMessageService
+    private lateinit var messageService: MessageService
 
     @Resource
-    private lateinit var peerMessageService: PeerService
+    private lateinit var peerService: PeerService
 
     /**
      * 注册 WebSocket Handler Mapping
@@ -31,8 +31,8 @@ class WebSocketConfig {
     @Bean
     fun handlerMapping(): HandlerMapping {
         val handlerMap = mapOf(
-            "/user-endpoint/message" to UserMessageHandler(userMessageService),
-            "/peer-endpoint/message" to PeerMessageHandler(peerMessageService)
+            "/user-endpoint/message" to UserMessageHandler(messageService),
+            "/peer-endpoint/message" to PeerMessageHandler(peerService)
         )
         return SimpleUrlHandlerMapping(handlerMap, -1)
     }

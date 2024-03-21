@@ -1,13 +1,13 @@
 package com.yifeistudio.jungle.handler
 
 import com.yifeistudio.jungle.adapter.RegistrationManager
-import com.yifeistudio.jungle.service.UserMessageService
+import com.yifeistudio.jungle.service.MessageService
 import jakarta.annotation.Resource
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
 
-class UserMessageHandler(userMessageService: UserMessageService) : WebSocketHandler {
+class UserMessageHandler(messageService: MessageService) : WebSocketHandler {
 
 
     @Resource

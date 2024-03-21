@@ -39,12 +39,16 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
             logger.info("server running in standalone mode.")
             return
         }
+        if (serverPort == 0) {
+            logger.warn("running in cluster mode but server port is illegal")
+            return
+        }
         val cluster = jungleProperties.cluster
         val ipPrefer = cluster.ipPrefer
         val ipAddress = Networks.localIpAddress(ipPrefer)
         serverMarker = "${ipAddress}@$serverPort"
+        peerMessageService.start(serverMarker).block()
         registrationManager.register(serverMarker)
-        peerMessageService.start().block()
         logger.info("jungle server self-register finished. marker = {}", serverMarker)
     }
 
@@ -65,7 +69,6 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
         }
         logger.warn("server is stopping. The task before server-stopped is being executed.")
         registrationManager.deregister(serverMarker)
-        peerMessageService.stop().block()
         logger.info("server - $serverMarker deregister success.")
     }
 }

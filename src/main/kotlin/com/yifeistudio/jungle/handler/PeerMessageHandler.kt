@@ -1,18 +1,14 @@
 package com.yifeistudio.jungle.handler
 
-import com.yifeistudio.jungle.adapter.RegistrationManager
 import com.yifeistudio.jungle.service.PeerService
-import jakarta.annotation.Resource
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
 
-class PeerMessageHandler(peerMessageService: PeerService) : WebSocketHandler {
-
-    @Resource
-    private lateinit var registrationManager: RegistrationManager
+class PeerMessageHandler(private val peerService: PeerService) : WebSocketHandler {
 
     override fun handle(session: WebSocketSession): Mono<Void> {
-        return Mono.empty()
+        // do something previously
+        return peerService.handle(session)
     }
 }

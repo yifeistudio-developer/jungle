@@ -2,7 +2,12 @@ package com.yifeistudio.jungle.service.impl
 
 import com.yifeistudio.jungle.adapter.impl.RedisRegistrationManager
 import com.yifeistudio.jungle.model.ClusterProfile
+import com.yifeistudio.jungle.model.Message
+import com.yifeistudio.jungle.model.MessageAttr
 import com.yifeistudio.jungle.service.PeerService
+import com.yifeistudio.space.unit.util.Bits
+import com.yifeistudio.space.unit.util.Jsons
+import jakarta.annotation.PreDestroy
 import jakarta.annotation.Resource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,56 +27,92 @@ class PeerServiceImpl : PeerService {
 
     private val client = ReactorNettyWebSocketClient()
 
+    private var localMarker: String = ""
+
     @Resource
     private lateinit var registrationManager: RedisRegistrationManager
-
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * 伙伴关系缓存
      */
     private val peerSessionCache: MutableMap<String, WebSocketSession> = ConcurrentHashMap()
 
+    /**
+     * 本地用户关系缓存
+     */
+    private val localUserRelCache: MutableMap<String, String> = ConcurrentHashMap<String, String>()
 
 
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * 连接伙伴
      */
-    private fun connect(host: String, port: Int):Mono<Void> {
+    override fun connect(host: String, port: Int):Mono<Void> {
         val url = URI("ws://$host:$port/peer-endpoint/message")
         return client.execute(url) { session ->
-            // 本地缓存
-            peerSessionCache["$host@$port"] = session
-            session.send(Mono.just(session.textMessage("hello world")))
-                .thenMany(session.receive())
-                .doOnNext { message -> println(message.payloadAsText) }
-                .then()
+            val connectMessage = Message.connectMessage(marker = localMarker)
+            session.send(Mono.just(session.textMessage(Jsons.stringify(connectMessage).get())))
+                .doOnSuccess {
+                    val marker = "$host@$port"
+                    logger.info("peer: $marker connected.")
+                    peerSessionCache[marker] = session
+                }
         }
+    }
+
+    /**
+     * 转发消息
+     */
+    override fun dispatch(userId: Long, message: Message<Any>) {
+
+    }
+
+    /**
+     * 处理伙伴消息
+     */
+    override fun handle(session: WebSocketSession): Mono<Void> {
+        val handshakeInfo = session.handshakeInfo
+        logger.info("handle message from ${handshakeInfo.remoteAddress?.address}")
+        return session.receive().doOnNext { msg ->
+            logger.info("handle message ${msg.type}, ${msg.payloadAsText}")
+            val message = Jsons.parse(msg.payloadAsText, Message::class.java).get()
+            if (Bits.hasMask(message.attr!!, MessageAttr.connect)) {
+                // 连接消息
+                val marker = message.content as String
+                peerSessionCache[marker] = session
+                logger.info("connected with : $marker")
+            }
+        }.then()
     }
 
     /**
      * 启动
      */
-    override fun start(): Mono<Void> {
+    override fun start(marker: String): Mono<Void> {
+        this.localMarker = marker
+        val markers = registrationManager.listPeer()
+
         return Mono.empty()
     }
 
     /**
      * 端开与伙伴的连接
      */
-    override fun stop(): Mono<Void> {
+    @PreDestroy
+    fun stop() {
         val transform: (WebSocketSession) -> Mono<Void> = { webSocketSession ->
             if (webSocketSession.isOpen) {
+                logger.warn("detect active websocket-session, it's being closed.")
                 webSocketSession.close()
             } else {
                 Mono.empty()
             }
         }
         val all: List<Mono<Void>> = peerSessionCache.values.map(transform)
-        return Flux.fromIterable(all).concatMap { it }.doOnNext {
+        Flux.fromIterable(all).concatMap { it }.doOnNext {
             peerSessionCache.clear()
-        }.then()
+        }.blockLast()
     }
 
     /**
