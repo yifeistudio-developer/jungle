@@ -10,7 +10,7 @@ interface PeerService {
     /**
      * 启动
      */
-    fun start(marker: String): Mono<Void>
+    fun launch(marker: String): Mono<Void>
 
 
     /**

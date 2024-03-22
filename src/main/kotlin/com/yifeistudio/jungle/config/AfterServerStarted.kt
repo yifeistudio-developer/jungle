@@ -47,7 +47,7 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
         val ipPrefer = cluster.ipPrefer
         val ipAddress = Networks.localIpAddress(ipPrefer)
         serverMarker = "${ipAddress}@$serverPort"
-        peerMessageService.start(serverMarker).block()
+        peerMessageService.launch(serverMarker).block()
         registrationManager.register(serverMarker)
         logger.info("jungle server self-register finished. marker = {}", serverMarker)
     }

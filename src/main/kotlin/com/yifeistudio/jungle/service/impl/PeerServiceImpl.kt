@@ -9,6 +9,7 @@ import com.yifeistudio.space.unit.util.Bits
 import com.yifeistudio.space.unit.util.Jsons
 import jakarta.annotation.PreDestroy
 import jakarta.annotation.Resource
+import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -29,6 +30,8 @@ class PeerServiceImpl : PeerService {
 
     private val client = ReactorNettyWebSocketClient()
 
+    val coroutineScope = CoroutineScope(Dispatchers.Default)
+
     @Resource
     private lateinit var registrationManager: RedisRegistrationManager
 
@@ -48,7 +51,7 @@ class PeerServiceImpl : PeerService {
     /**
      * 连接伙伴
      */
-    override fun connect(host: String, port: Int):Mono<Void> {
+    override fun connect(host: String, port: Int): Mono<Void> {
         val url = URI("ws://$host:$port/peer-endpoint/message")
         return client.execute(url) { session ->
             val connectMessage = Message.connectMessage(marker = localMarker)
@@ -89,18 +92,65 @@ class PeerServiceImpl : PeerService {
     /**
      * 启动
      */
-    override fun start(marker: String): Mono<Void> {
+    override fun launch(marker: String): Mono<Void> {
         this.localMarker = marker
-        val markers = registrationManager.listPeer()
-
+        coroutineScope.launch {
+            while (isActive) {
+                logger.info("coroutine scope launched. start executing tasks")
+                try {
+                    keepAlive()
+                    delay(5000)
+                } catch (exp: Throwable) {
+                    logger.error("keep alive error. - ", exp)
+                }
+            }
+        }
         return Mono.empty()
     }
 
+
     /**
-     * 端开与伙伴的连接
+     * 获取当前集群概览信息
+     */
+    override fun profile(): ClusterProfile {
+        return ClusterProfile(registrationManager.listPeer().size)
+    }
+
+    /**
+     * 保活协程
+     */
+    private fun keepAlive() {
+        // 同步注册中心伙伴信息
+        for (item in peerSessionCache.iterator()) {
+            if (!item.value.isOpen) {
+                // 清理掉断开的连接
+                peerSessionCache.remove(item.key)
+            }
+        }
+        val remotePeers = registrationManager.listPeer()
+        val localPeers = peerSessionCache.keys
+        val newPeers = remotePeers.filter { !localPeers.contains(it) && it != localMarker }
+        // 与新伙伴建立连接
+        val all: List<Mono<Void>> = newPeers.map {
+            logger.info("detected new peer: $it try to connect to it")
+            val trips = it.split("@")
+            connect(trips[0], trips[1].toInt())
+        }
+        Flux.fromIterable(all).concatMap { it }.blockLast()
+    }
+
+
+    /**
+     * 断开与伙伴的连接
+     *
+     * -取消保活协程
+     * -断开与伙伴的连接
      */
     @PreDestroy
     fun stop() {
+        if (coroutineScope.isActive) {
+            coroutineScope.cancel("server is stopped.")
+        }
         val transform: (WebSocketSession) -> Mono<Void> = { webSocketSession ->
             if (webSocketSession.isOpen) {
                 logger.warn("detect active websocket-session, it's being closed.")
@@ -113,13 +163,6 @@ class PeerServiceImpl : PeerService {
         Flux.fromIterable(all).concatMap { it }.doOnNext {
             peerSessionCache.clear()
         }.blockLast()
-    }
-
-    /**
-     * 获取当前集群概览信息
-     */
-    override fun profile(): ClusterProfile {
-        return ClusterProfile(registrationManager.listPeer().size)
     }
 }
 ///～
