@@ -1,17 +1,17 @@
 package com.yifeistudio.jungle.service.impl
 
-import com.yifeistudio.jungle.adapter.impl.RedisRegistrationManager
+import com.yifeistudio.jungle.adapter.RegistrationManager
 import com.yifeistudio.jungle.model.ClusterProfile
 import com.yifeistudio.jungle.model.Message
 import com.yifeistudio.jungle.model.MessageAttr
 import com.yifeistudio.jungle.service.PeerService
 import com.yifeistudio.space.unit.util.Bits
 import com.yifeistudio.space.unit.util.Jsons
-import jakarta.annotation.PreDestroy
 import jakarta.annotation.Resource
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.socket.WebSocketSession
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
@@ -19,21 +19,24 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 伙伴管理服务
  */
 @Service
-class PeerServiceImpl : PeerService {
+class PeerServiceImpl : PeerService, SmartLifecycle {
 
     private var localMarker: String = ""
+
+    private val state: AtomicBoolean = AtomicBoolean(false)
 
     private val client = ReactorNettyWebSocketClient()
 
     val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     @Resource
-    private lateinit var registrationManager: RedisRegistrationManager
+    private lateinit var registrationManager: RegistrationManager
 
     /**
      * 伙伴关系缓存
@@ -93,18 +96,8 @@ class PeerServiceImpl : PeerService {
      * 启动
      */
     override fun launch(marker: String): Mono<Void> {
+        start()
         this.localMarker = marker
-        coroutineScope.launch {
-            while (isActive) {
-                logger.info("coroutine scope launched. start executing tasks")
-                try {
-                    keepAlive()
-                    delay(5000)
-                } catch (exp: Throwable) {
-                    logger.error("keep alive error. - ", exp)
-                }
-            }
-        }
         return Mono.empty()
     }
 
@@ -115,6 +108,64 @@ class PeerServiceImpl : PeerService {
     override fun profile(): ClusterProfile {
         return ClusterProfile(registrationManager.listPeer().size)
     }
+
+    /**
+     * 启动
+     */
+    override fun start() {
+        state.compareAndSet(false, true)
+        coroutineScope.launch {
+            logger.info("coroutine scope launched. start executing tasks")
+            while (isActive) {
+                try {
+                    keepAlive()
+                    delay(5000)
+                } catch (exp: Throwable) {
+                    logger.error("keep alive error. - ", exp)
+                }
+            }
+        }
+    }
+
+    /**
+     * 关闭自启动
+     */
+    override fun isAutoStartup(): Boolean {
+        return false
+    }
+
+    override fun isRunning(): Boolean {
+        return state.get()
+    }
+
+    override fun getPhase(): Int {
+        return 1
+    }
+    /**
+     * 断开与伙伴的连接
+     *
+     * -取消保活协程
+     * -断开与伙伴的连接
+     */
+    override fun stop() {
+        if (coroutineScope.isActive) {
+            coroutineScope.cancel("server is stopped.")
+        }
+        val transform: (WebSocketSession) -> Mono<Void> = { webSocketSession ->
+            if (webSocketSession.isOpen) {
+                logger.warn("detect active websocket-session, it's being closed.")
+                webSocketSession.close()
+            } else {
+                Mono.empty()
+            }
+        }
+        val all: List<Mono<Void>> = peerSessionCache.values.map(transform)
+        Flux.fromIterable(all).concatMap { it }.doOnNext {
+            peerSessionCache.clear()
+        }.blockLast()
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     /**
      * 保活协程
@@ -137,32 +188,6 @@ class PeerServiceImpl : PeerService {
             connect(trips[0], trips[1].toInt())
         }
         Flux.fromIterable(all).concatMap { it }.blockLast()
-    }
-
-
-    /**
-     * 断开与伙伴的连接
-     *
-     * -取消保活协程
-     * -断开与伙伴的连接
-     */
-    @PreDestroy
-    fun stop() {
-        if (coroutineScope.isActive) {
-            coroutineScope.cancel("server is stopped.")
-        }
-        val transform: (WebSocketSession) -> Mono<Void> = { webSocketSession ->
-            if (webSocketSession.isOpen) {
-                logger.warn("detect active websocket-session, it's being closed.")
-                webSocketSession.close()
-            } else {
-                Mono.empty()
-            }
-        }
-        val all: List<Mono<Void>> = peerSessionCache.values.map(transform)
-        Flux.fromIterable(all).concatMap { it }.doOnNext {
-            peerSessionCache.clear()
-        }.blockLast()
     }
 }
 ///～

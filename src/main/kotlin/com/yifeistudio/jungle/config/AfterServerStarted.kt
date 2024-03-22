@@ -4,7 +4,6 @@ import com.yifeistudio.jungle.adapter.impl.RedisRegistrationManager
 import com.yifeistudio.jungle.model.RunningMode
 import com.yifeistudio.jungle.service.PeerService
 import com.yifeistudio.jungle.util.Networks
-import jakarta.annotation.PreDestroy
 import jakarta.annotation.Resource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,9 +18,6 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
 
     // 服务端口号
     private var serverPort: Int = 0
-
-    // 节点标识： IP_ADDRESS@SERVER_PORT
-    private var serverMarker: String = ""
 
     @Resource
     private lateinit var jungleProperties: JungleProperties
@@ -46,7 +42,7 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
         val cluster = jungleProperties.cluster
         val ipPrefer = cluster.ipPrefer
         val ipAddress = Networks.localIpAddress(ipPrefer)
-        serverMarker = "${ipAddress}@$serverPort"
+        val serverMarker = "${ipAddress}@$serverPort"
         peerMessageService.launch(serverMarker).block()
         registrationManager.register(serverMarker)
         logger.info("jungle server self-register finished. marker = {}", serverMarker)
@@ -59,17 +55,5 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
         serverPort = event.webServer.port
     }
 
-    /**
-     * 停机时关闭资源
-     */
-    @PreDestroy
-    fun onStopping() {
-        if (serverMarker == "") {
-            return
-        }
-        logger.warn("server is stopping. The task before server-stopped is being executed.")
-        registrationManager.deregister(serverMarker)
-        logger.info("server - $serverMarker deregister success.")
-    }
 }
 ///~

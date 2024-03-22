@@ -2,7 +2,6 @@ package com.yifeistudio.jungle.adapter.impl
 
 import com.yifeistudio.jungle.adapter.RegistrationManager
 import jakarta.annotation.Resource
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
@@ -49,19 +48,7 @@ class RedisRegistrationManager : RegistrationManager {
      * 服务下线或不可用时向注册中心注销自己
      */
     override fun deregister(marker: String) {
-        val connectionFactory = redisTemplate.connectionFactory
-        if (connectionFactory is LettuceConnectionFactory) {
-            if (connectionFactory.isRunning) {
-                redisTemplate.opsForSet().remove(activePeerCacheKey, marker)
-                return
-            }
-            try {
-                connectionFactory.start()
-                redisTemplate.opsForSet().remove(activePeerCacheKey, marker)
-            } finally {
-                connectionFactory.destroy()
-            }
-        }
+        redisTemplate.opsForSet().remove(activePeerCacheKey, marker)
     }
 
     /**
