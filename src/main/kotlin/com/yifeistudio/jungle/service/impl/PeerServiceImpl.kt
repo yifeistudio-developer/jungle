@@ -25,9 +25,9 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class PeerServiceImpl : PeerService {
 
-    private val client = ReactorNettyWebSocketClient()
-
     private var localMarker: String = ""
+
+    private val client = ReactorNettyWebSocketClient()
 
     @Resource
     private lateinit var registrationManager: RedisRegistrationManager

@@ -13,7 +13,7 @@ class SocketTests {
     @Test
     fun websocketUserEndpointTest() {
         val client = ReactorNettyWebSocketClient()
-        val url = URI("ws://localhost:8080/user-endpoint/message")
+        val url = URI("ws://localhost:39663/user-endpoint/message")
         client.execute(url) {
                 session ->
             session.send(Mono.just(session.textMessage("hello world")))
