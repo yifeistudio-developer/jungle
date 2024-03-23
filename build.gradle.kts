@@ -40,7 +40,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	runtimeOnly("com.h2database:h2")
+	runtimeOnly("mysql:mysql-connect-java")
 	compileOnly("org.springframework.boot:spring-boot-autoconfigure")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")
