@@ -73,14 +73,11 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
      */
     override fun handle(session: WebSocketSession) {
         val handshakeInfo: HandshakeInfo = session.handshakeInfo
-        var subProtocol: String? = handshakeInfo.subProtocol
-
         logger.info("handle message from ${handshakeInfo.remoteAddress?.address}")
-
         session.receive().doOnNext { msg ->
             // 处理PING 消息
             if (msg.type == WebSocketMessage.Type.PING) {
-                val pongMessage = session.pongMessage { f -> f.wrap("PONG".toByteArray()) }
+                logger.info("handle ping message.")
             }
             // 处理连接消息
             if (msg.type == WebSocketMessage.Type.TEXT) {
@@ -181,6 +178,9 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
      */
     private fun keepAlive() {
         // 同步注册中心伙伴信息
+        if (logger.isDebugEnabled) {
+            logger.debug("keep alive task is running...")
+        }
         for (item in peerSessionCache.iterator()) {
             if (!item.value.isOpen) {
                 // 清理掉断开的连接
@@ -192,30 +192,28 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
         val localPeers = peerSessionCache.keys
         val newPeers = remotePeers.filter { !localPeers.contains(it) && it != localMarker }
         // 与新伙伴建立连接
-        val all: List<Mono<Void>> = newPeers.map {
+        newPeers.forEach {
             logger.info("detected new peer: $it try to connect to it")
             val trips = it.split("@")
             connect(trips[0], trips[1].toInt())
         }
-        Flux.fromIterable(all).concatMap { it }.blockLast()
     }
 
     /**
      * 连接伙伴
      */
-    private fun connect(host: String, port: Int, deregister:Boolean = false): Mono<Void> {
+    private fun connect(host: String, port: Int) {
         val url = URI("ws://$host:$port/peer-endpoint/message")
-        val marker: String = "$host:$port"
-        return client.execute(url) { session ->
+        val marker = "$host@$port"
+        client.execute(url) { session ->
             logger.info("connected to $marker succeed!")
             peerSessionCache[marker] = session
-            // 挂起保持连接
             Mono.never()
         }.onErrorResume {
             logger.error("connect to $marker failed.")
             registrationManager.deregister("$host@$port")
             Mono.empty()
-        }
+        }.subscribe()
     }
 }
 ///～
