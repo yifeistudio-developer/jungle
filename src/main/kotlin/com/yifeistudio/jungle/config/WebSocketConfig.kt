@@ -13,17 +13,19 @@ import org.springframework.web.reactive.HandlerMapping
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter
 
-
+/**
+ * WebSocket配置
+ */
 @Configuration
 class WebSocketConfig {
 
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    @Resource
+    private lateinit var peerService: PeerService
 
     @Resource
     private lateinit var messageService: MessageService
 
-    @Resource
-    private lateinit var peerService: PeerService
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * 注册 WebSocket Handler Mapping
@@ -37,6 +39,11 @@ class WebSocketConfig {
         return SimpleUrlHandlerMapping(handlerMap, -1)
     }
 
+    /**
+     * 适配器配置
+     */
     @Bean
     fun handlerAdapter() = WebSocketHandlerAdapter()
+
 }
+///～

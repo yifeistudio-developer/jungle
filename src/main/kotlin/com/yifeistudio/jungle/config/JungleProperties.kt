@@ -3,6 +3,9 @@ package com.yifeistudio.jungle.config
 import com.yifeistudio.jungle.model.RunningMode
 import org.springframework.boot.context.properties.ConfigurationProperties
 
+/**
+ * 应用属性
+ */
 @ConfigurationProperties(prefix = "jungle")
 class JungleProperties {
 
@@ -34,3 +37,4 @@ class JungleProperties {
     }
 
 }
+///～

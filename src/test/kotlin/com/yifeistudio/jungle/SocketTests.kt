@@ -13,13 +13,15 @@ class SocketTests {
     @Test
     fun websocketUserEndpointTest() {
         val client = ReactorNettyWebSocketClient()
-        val url = URI("ws://localhost:39663/user-endpoint/message")
+        val url = URI("ws://localhost:37777/peer-endpoint/message")
         client.execute(url) {
                 session ->
             session.send(Mono.just(session.textMessage("hello world")))
                 .thenMany(session.receive())
                 .doOnNext { message -> println(message.payloadAsText) }
-                .then()
+                .then().doOnSuccess {
+                    println(session.isOpen)
+                }
         }.block()
     }
 }

@@ -31,7 +31,7 @@ class RedisRegistrationManagerTests {
     @Test
     fun listPeerTest() {
         redisTemplate.delete("ACTIVE_PEER_CACHE_KEY")
-        val peers = redisRegistrationManager.listPeer()
+        val peers = redisRegistrationManager.peers()
         logger.info("test result: {}", Jsons.stringify(peers).get())
     }
 

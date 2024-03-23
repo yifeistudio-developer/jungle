@@ -25,8 +25,6 @@ class PeerServiceTests {
      */
     @Test
     fun connectTest() {
-        peerService.connect("localhost", 44349)
-            .block()
 
 //        doOnError {
 //            logger.error("handler connect error: ${it.message}")

@@ -12,7 +12,14 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.web.context.WebServerInitializedEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
 
+/**
+ * 服务启动后
+ *
+ * - 服务可以以单点或集群模式启动
+ * - 集群模式启动下则需要启动伙伴关系管理
+ */
 @Component
 class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerInitializedEvent> {
 
@@ -20,32 +27,40 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
     private var serverPort: Int = 0
 
     @Resource
-    private lateinit var jungleProperties: JungleProperties
+    private lateinit var peerMessageService: PeerService
 
     @Resource
-    private lateinit var peerMessageService: PeerService
+    private lateinit var jungleProperties: JungleProperties
 
     @Resource
     private lateinit var registrationManager: RedisRegistrationManager
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
+    /**
+     * 应用启动后
+     *
+     * - 根据配置判断是否取消集群服务
+     */
     override fun run(args: ApplicationArguments?) {
         if (jungleProperties.mode == RunningMode.STANDALONE) {
             logger.info("server running in standalone mode.")
             return
         }
-        if (serverPort == 0) {
-            logger.warn("running in cluster mode but server port is illegal")
+        if (serverPort < 1024) {
+            logger.warn("running in cluster mode but server port is illegal $serverPort")
             return
         }
         val cluster = jungleProperties.cluster
         val ipPrefer = cluster.ipPrefer
         val ipAddress = Networks.localIpAddress(ipPrefer)
         val serverMarker = "${ipAddress}@$serverPort"
-        peerMessageService.launch(serverMarker).block()
-        registrationManager.register(serverMarker)
-        logger.info("jungle server self-register finished. marker = {}", serverMarker)
+        peerMessageService.launch(serverMarker).doOnSuccess {
+            logger.info("peer service is started. the will running in cluster mode.")
+        }.onErrorResume {
+            exp -> logger.error("launch peer service failed. the server will running in standalone mode. -", exp)
+            Mono.empty()
+        }.block()
     }
 
     /**

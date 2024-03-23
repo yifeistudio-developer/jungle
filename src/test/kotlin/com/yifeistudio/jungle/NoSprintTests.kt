@@ -5,6 +5,7 @@ import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import reactor.core.publisher.Mono
 
 class NoSprintTests {
 
@@ -26,6 +27,12 @@ class NoSprintTests {
         }
         readlnOrNull()
         coroutineScope.cancel()
+    }
+
+    @Test
+    fun monoTest() {
+        Mono.just("abc").doOnNext { println(it) }.then(Mono.just("efg")).doOnNext { println(it) }.then()
+        Thread.sleep(50000)
     }
 
 }

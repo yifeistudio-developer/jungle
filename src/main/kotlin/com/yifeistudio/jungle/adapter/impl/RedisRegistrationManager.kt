@@ -27,7 +27,7 @@ class RedisRegistrationManager : RegistrationManager {
     /**
      * 获取所有伙伴信息
      */
-    override fun listPeer(): Set<String> {
+    override fun peers(): Set<String> {
         val members: MutableSet<String> = redisTemplate.opsForSet()
             .members(activePeerCacheKey) ?: return emptySet()
         return members.toSet()
@@ -55,11 +55,11 @@ class RedisRegistrationManager : RegistrationManager {
      * 获取用户关系
      */
     override fun mapUserRelation(vararg userIds: String): Map<String, String> {
+        // todo 待完善
         var userRelation: MutableList<String> = redisTemplate.opsForHash<String, String>()
             .multiGet(userChannelCacheKey, userIds.toSet())
         redisTemplate.opsForHash<String, String>()
         return emptyMap()
     }
-
-
 }
+///~

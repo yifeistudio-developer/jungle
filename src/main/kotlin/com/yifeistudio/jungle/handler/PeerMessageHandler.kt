@@ -9,6 +9,8 @@ class PeerMessageHandler(private val peerService: PeerService) : WebSocketHandle
 
     override fun handle(session: WebSocketSession): Mono<Void> {
         // do something previously
-        return peerService.handle(session)
+        peerService.handle(session)
+        // 挂起保持连接
+        return Mono.never()
     }
 }

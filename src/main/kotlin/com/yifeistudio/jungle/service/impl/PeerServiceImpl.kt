@@ -3,20 +3,21 @@ package com.yifeistudio.jungle.service.impl
 import com.yifeistudio.jungle.adapter.RegistrationManager
 import com.yifeistudio.jungle.model.ClusterProfile
 import com.yifeistudio.jungle.model.Message
-import com.yifeistudio.jungle.model.MessageAttr
 import com.yifeistudio.jungle.service.PeerService
-import com.yifeistudio.space.unit.util.Bits
-import com.yifeistudio.space.unit.util.Jsons
 import jakarta.annotation.Resource
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.socket.HandshakeInfo
+import org.springframework.web.reactive.socket.WebSocketMessage
 import org.springframework.web.reactive.socket.WebSocketSession
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.netty.http.client.HttpClient
+import reactor.netty.http.client.WebsocketClientSpec
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -31,7 +32,9 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
 
     private val state: AtomicBoolean = AtomicBoolean(false)
 
-    private val client = ReactorNettyWebSocketClient()
+    private val builder: WebsocketClientSpec.Builder = WebsocketClientSpec.builder().handlePing(true).maxFramePayloadLength(1024)
+
+    private val client = ReactorNettyWebSocketClient(HttpClient.create(), builder)
 
     val coroutineScope = CoroutineScope(Dispatchers.Default)
 
@@ -52,22 +55,6 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
-     * 连接伙伴
-     */
-    override fun connect(host: String, port: Int): Mono<Void> {
-        val url = URI("ws://$host:$port/peer-endpoint/message")
-        return client.execute(url) { session ->
-            val connectMessage = Message.connectMessage(marker = localMarker)
-            session.send(Mono.just(session.textMessage(Jsons.stringify(connectMessage).get())))
-                .doOnSuccess {
-                    val marker = "$host@$port"
-                    logger.info("peer: $marker connected.")
-                    peerSessionCache[marker] = session
-                }
-        }
-    }
-
-    /**
      * 转发消息
      */
     override fun dispatch(userId: Long, message: Message<Any>) {
@@ -77,19 +64,22 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
     /**
      * 处理伙伴消息
      */
-    override fun handle(session: WebSocketSession): Mono<Void> {
-        val handshakeInfo = session.handshakeInfo
+    override fun handle(session: WebSocketSession) {
+        val handshakeInfo: HandshakeInfo = session.handshakeInfo
+        var subProtocol: String? = handshakeInfo.subProtocol
+
         logger.info("handle message from ${handshakeInfo.remoteAddress?.address}")
-        return session.receive().doOnNext { msg ->
-            logger.info("handle message ${msg.type}, ${msg.payloadAsText}")
-            val message = Jsons.parse(msg.payloadAsText, Message::class.java).get()
-            if (Bits.hasMask(message.attr!!, MessageAttr.connect)) {
-                // 连接消息
-                val marker = message.content as String
-                peerSessionCache[marker] = session
-                logger.info("connected with : $marker")
+
+        session.receive().doOnNext { msg ->
+            // 处理PING 消息
+            if (msg.type == WebSocketMessage.Type.PING) {
+                val pongMessage = session.pongMessage { f -> f.wrap("PONG".toByteArray()) }
             }
-        }.then()
+            // 处理连接消息
+            if (msg.type == WebSocketMessage.Type.TEXT) {
+                logger.info("handle connect message. ${msg.payloadAsText}")
+            }
+        }.subscribe()
     }
 
     /**
@@ -98,6 +88,7 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
     override fun launch(marker: String): Mono<Void> {
         start()
         this.localMarker = marker
+        registrationManager.register(localMarker)
         return Mono.empty()
     }
 
@@ -106,7 +97,7 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
      * 获取当前集群概览信息
      */
     override fun profile(): ClusterProfile {
-        return ClusterProfile(registrationManager.listPeer().size)
+        return ClusterProfile(registrationManager.peers().size)
     }
 
     /**
@@ -121,7 +112,11 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
                     keepAlive()
                     delay(5000)
                 } catch (exp: Throwable) {
-                    logger.error("keep alive error. - ", exp)
+                    if (exp is CancellationException) {
+                        logger.warn("server is stopping. the execution is canceled")
+                    } else {
+                        logger.error("keep alive error. - ", exp)
+                    }
                 }
             }
         }
@@ -141,16 +136,23 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
     override fun getPhase(): Int {
         return 1
     }
+
     /**
      * 断开与伙伴的连接
-     *
-     * -取消保活协程
-     * -断开与伙伴的连接
+     * - 自我注销
+     * - 取消保活协程
+     * - 断开与伙伴的连接
      */
     override fun stop() {
-        if (coroutineScope.isActive) {
-            coroutineScope.cancel("server is stopped.")
+        // 自我注销
+        if (localMarker != "") {
+            registrationManager.deregister(localMarker)
         }
+        // 停止保活协程
+        if (coroutineScope.isActive) {
+            coroutineScope.cancel()
+        }
+        // 断开与伙伴间的连接
         val transform: (WebSocketSession) -> Mono<Void> = { webSocketSession ->
             if (webSocketSession.isOpen) {
                 logger.warn("detect active websocket-session, it's being closed.")
@@ -175,10 +177,11 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
         for (item in peerSessionCache.iterator()) {
             if (!item.value.isOpen) {
                 // 清理掉断开的连接
+                logger.warn("detect active websocket-session, it's being closed. remove ${item.key}")
                 peerSessionCache.remove(item.key)
             }
         }
-        val remotePeers = registrationManager.listPeer()
+        val remotePeers = registrationManager.peers()
         val localPeers = peerSessionCache.keys
         val newPeers = remotePeers.filter { !localPeers.contains(it) && it != localMarker }
         // 与新伙伴建立连接
@@ -188,6 +191,21 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
             connect(trips[0], trips[1].toInt())
         }
         Flux.fromIterable(all).concatMap { it }.blockLast()
+    }
+
+    /**
+     * 连接伙伴
+     */
+    private fun connect(host: String, port: Int, deregister:Boolean = false): Mono<Void> {
+        val url = URI("ws://$host:$port/peer-endpoint/message")
+        return client.execute(url) { session ->
+            peerSessionCache["$host@$port"] = session
+            Mono.empty()
+        }.onErrorResume {
+            logger.error("connect failed.")
+            registrationManager.deregister("$host@$port")
+            Mono.empty()
+        }
     }
 }
 ///～

@@ -12,16 +12,10 @@ interface PeerService {
      */
     fun launch(marker: String): Mono<Void>
 
-
     /**
      * 获取当前集群概览信息
      */
     fun profile(): ClusterProfile
-
-    /**
-     * 连接伙伴
-     */
-    fun connect(host: String, port: Int): Mono<Void>
 
     /**
      * 转发消息
@@ -31,6 +25,6 @@ interface PeerService {
     /**
      * 处理伙伴消息
      */
-    fun handle(session: WebSocketSession): Mono<Void>
+    fun handle(session: WebSocketSession)
 
 }

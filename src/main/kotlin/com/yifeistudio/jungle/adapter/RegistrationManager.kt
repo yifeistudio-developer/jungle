@@ -8,7 +8,7 @@ interface RegistrationManager {
     /**
      * 获取所有伙伴信息
      */
-    fun listPeer(): Set<String>
+    fun peers(): Set<String>
 
     /**
      * 注册
