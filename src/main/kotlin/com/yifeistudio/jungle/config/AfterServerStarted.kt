@@ -1,6 +1,5 @@
 package com.yifeistudio.jungle.config
 
-import com.yifeistudio.jungle.adapter.impl.RedisRegistrationManager
 import com.yifeistudio.jungle.model.RunningMode
 import com.yifeistudio.jungle.service.PeerService
 import com.yifeistudio.jungle.util.Networks
@@ -31,9 +30,6 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
 
     @Resource
     private lateinit var jungleProperties: JungleProperties
-
-    @Resource
-    private lateinit var registrationManager: RedisRegistrationManager
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 

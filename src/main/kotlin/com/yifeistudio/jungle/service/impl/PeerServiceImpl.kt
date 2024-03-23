@@ -30,9 +30,16 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
 
     private var localMarker: String = ""
 
+    /**
+     * 管理器状态
+     */
     private val state: AtomicBoolean = AtomicBoolean(false)
 
-    private val builder: WebsocketClientSpec.Builder = WebsocketClientSpec.builder().handlePing(true).maxFramePayloadLength(1024)
+    /**
+     * 客户端配置
+     */
+    private val builder: WebsocketClientSpec.Builder = WebsocketClientSpec.builder()
+        .handlePing(true)
 
     private val client = ReactorNettyWebSocketClient(HttpClient.create(), builder)
 
@@ -198,11 +205,14 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
      */
     private fun connect(host: String, port: Int, deregister:Boolean = false): Mono<Void> {
         val url = URI("ws://$host:$port/peer-endpoint/message")
+        val marker: String = "$host:$port"
         return client.execute(url) { session ->
-            peerSessionCache["$host@$port"] = session
-            Mono.empty()
+            logger.info("connected to $marker succeed!")
+            peerSessionCache[marker] = session
+            // 挂起保持连接
+            Mono.never()
         }.onErrorResume {
-            logger.error("connect failed.")
+            logger.error("connect to $marker failed.")
             registrationManager.deregister("$host@$port")
             Mono.empty()
         }

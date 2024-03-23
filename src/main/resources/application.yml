@@ -27,4 +27,4 @@ jungle:
   mode: cluster
   cluster:
     keep-connected: true
-    ip-prefer: 192.168.18
+    ip-prefer: 192.168

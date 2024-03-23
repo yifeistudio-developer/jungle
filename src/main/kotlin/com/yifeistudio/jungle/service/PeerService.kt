@@ -5,6 +5,9 @@ import com.yifeistudio.jungle.model.Message
 import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
 
+/**
+ * 伙伴关系管理
+ */
 interface PeerService {
 
     /**
