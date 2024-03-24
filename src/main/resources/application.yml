@@ -12,10 +12,10 @@ server:
 ---
 spring:
   datasource:
-    url: jdbc:h2:mem:jungle_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/jungle
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: jungle
-    password:
+    password: jungle
   h2:
     console:
       enabled: true
