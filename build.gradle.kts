@@ -15,9 +15,6 @@ java {
 }
 
 configurations {
-	compileOnly {
-		extendsFrom(configurations.annotationProcessor.get())
-	}
 	all {
 		exclude("org.springframework.boot", "spring-boot-starter-tomcat")
 	}
@@ -48,6 +45,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
+// Kotlin 编译配置
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs += "-Xjsr305=strict"
@@ -55,6 +53,7 @@ tasks.withType<KotlinCompile> {
 	}
 }
 
+// 测试配置
 tasks.withType<Test> {
 	useJUnitPlatform()
 }

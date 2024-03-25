@@ -30,20 +30,21 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
 
     private var localMarker: String = ""
 
+    val coroutineScope = CoroutineScope(Dispatchers.Default)
+
     /**
      * 管理器状态
      */
     private val state: AtomicBoolean = AtomicBoolean(false)
 
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
     /**
      * 客户端配置
      */
-    private val builder: WebsocketClientSpec.Builder = WebsocketClientSpec.builder()
-        .handlePing(true)
+    private val builder: WebsocketClientSpec.Builder = WebsocketClientSpec.builder().handlePing(true)
 
     private val client = ReactorNettyWebSocketClient(HttpClient.create(), builder)
-
-    val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     @Resource
     private lateinit var registrationManager: RegistrationManager
@@ -53,18 +54,17 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
      */
     private val peerSessionCache: MutableMap<String, WebSocketSession> = ConcurrentHashMap()
 
+
     /**
      * 本地用户关系缓存
      */
     private val localUserRelCache: MutableMap<String, String> = ConcurrentHashMap<String, String>()
 
-
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-
     /**
      * 转发消息
      */
     override fun dispatch(userId: Long, message: Message<Any>) {
+        val peerMarker: String? = localUserRelCache[userId.toString()]
 
     }
 

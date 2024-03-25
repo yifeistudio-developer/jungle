@@ -24,7 +24,7 @@ spring:
     activate:
       on-profile: dev
 jungle:
-  mode: cluster
+  mode: standalone
   cluster:
     keep-connected: true
     ip-prefer: 192.168

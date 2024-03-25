@@ -39,8 +39,8 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
      * - 根据配置判断是否取消集群服务
      */
     override fun run(args: ApplicationArguments?) {
+        logger.info("server running in ${jungleProperties.mode} mode.")
         if (jungleProperties.mode == RunningMode.STANDALONE) {
-            logger.info("server running in standalone mode.")
             return
         }
         if (serverPort < 1024) {
