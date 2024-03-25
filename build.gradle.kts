@@ -31,22 +31,21 @@ val mybatisVersion = "3.5.5"
 val spaceVersion = "2.0.1-RELEASE"
 
 dependencies {
-	implementation("com.baomidou:mybatis-plus-boot-starter:${mybatisVersion}")
 	implementation("com.yifeistudio:space-unit:${spaceVersion}")
+	implementation("com.baomidou:mybatis-plus-boot-starter:${mybatisVersion}")
+	// springboot.
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	// kotlin.
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-	implementation("org.springframework.boot:spring-boot-starter-actuator")
-
+	// runtime.
 	runtimeOnly("com.mysql:mysql-connector-j")
-//	compileOnly("org.springframework.boot:spring-boot-autoconfigure")
-
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")
-	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.withType<KotlinCompile> {
@@ -60,6 +59,8 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
+// 忽略测试
 tasks.named<Test>("test") {
 	enabled = false
 }
+///~
