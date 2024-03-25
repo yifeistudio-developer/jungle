@@ -16,6 +16,14 @@ interface PeerService {
     fun launch(marker: String): Mono<Void>
 
     /**
+     * 断开与伙伴的连接
+     * - 自我注销
+     * - 取消保活协程
+     * - 断开与伙伴的连接
+     */
+    fun stop()
+
+    /**
      * 获取当前集群概览信息
      */
     fun profile(): ClusterProfile

@@ -8,7 +8,6 @@ import jakarta.annotation.Resource
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.socket.HandshakeInfo
 import org.springframework.web.reactive.socket.WebSocketMessage
@@ -26,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 伙伴管理服务
  */
 @Service
-class PeerServiceImpl : PeerService, SmartLifecycle {
+class PeerServiceImpl : PeerService {
 
     private var localMarker: String = ""
 
@@ -90,24 +89,6 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
      * 启动
      */
     override fun launch(marker: String): Mono<Void> {
-        start()
-        this.localMarker = marker
-        registrationManager.register(localMarker)
-        return Mono.empty()
-    }
-
-
-    /**
-     * 获取当前集群概览信息
-     */
-    override fun profile(): ClusterProfile {
-        return ClusterProfile(registrationManager.peers().size)
-    }
-
-    /**
-     * 启动
-     */
-    override fun start() {
         state.compareAndSet(false, true)
         coroutineScope.launch {
             logger.info("coroutine scope launched. start executing tasks")
@@ -124,21 +105,17 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
                 }
             }
         }
+        this.localMarker = marker
+        registrationManager.register(localMarker)
+        return Mono.empty()
     }
+
 
     /**
-     * 关闭自启动
+     * 获取当前集群概览信息
      */
-    override fun isAutoStartup(): Boolean {
-        return false
-    }
-
-    override fun isRunning(): Boolean {
-        return state.get()
-    }
-
-    override fun getPhase(): Int {
-        return 1
+    override fun profile(): ClusterProfile {
+        return ClusterProfile(registrationManager.peers().size)
     }
 
     /**
@@ -148,6 +125,9 @@ class PeerServiceImpl : PeerService, SmartLifecycle {
      * - 断开与伙伴的连接
      */
     override fun stop() {
+        if (!state.get()) {
+            return
+        }
         // 自我注销
         if (localMarker != "") {
             registrationManager.deregister(localMarker)

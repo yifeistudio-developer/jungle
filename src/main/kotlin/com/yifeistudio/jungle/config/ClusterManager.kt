@@ -6,12 +6,12 @@ import com.yifeistudio.jungle.util.Networks
 import jakarta.annotation.Resource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.web.context.WebServerInitializedEvent
 import org.springframework.context.ApplicationListener
+import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 服务启动后
@@ -20,10 +20,14 @@ import reactor.core.publisher.Mono
  * - 集群模式启动下则需要启动伙伴关系管理
  */
 @Component
-class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerInitializedEvent> {
+class ClusterManager : SmartLifecycle, ApplicationListener<WebServerInitializedEvent> {
+
 
     // 服务端口号
     private var serverPort: Int = 0
+
+    // 状态
+    private val isRunning: AtomicBoolean = AtomicBoolean(false)
 
     @Resource
     private lateinit var peerMessageService: PeerService
@@ -38,7 +42,7 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
      *
      * - 根据配置判断是否取消集群服务
      */
-    override fun run(args: ApplicationArguments?) {
+    override fun start() {
         logger.info("server running in ${jungleProperties.mode} mode.")
         if (jungleProperties.mode == RunningMode.STANDALONE) {
             return
@@ -53,10 +57,29 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
         val serverMarker = "${ipAddress}@$serverPort"
         peerMessageService.launch(serverMarker).doOnSuccess {
             logger.info("peer service is started. the will running in cluster mode.")
-        }.onErrorResume {
-            exp -> logger.error("launch peer service failed. the server will running in standalone mode. -", exp)
+            isRunning.compareAndSet(false, true)
+        }.onErrorResume { exp ->
+            logger.error("launch peer service failed. the server will running in standalone mode. -", exp)
             Mono.empty()
         }.block()
+    }
+
+    override fun stop() {
+        if (isRunning.get()) {
+            peerMessageService.stop()
+        }
+    }
+
+    override fun isRunning(): Boolean {
+        return isRunning.get()
+    }
+
+    override fun getPhase(): Int {
+        return 1
+    }
+
+    override fun isAutoStartup(): Boolean {
+        return false
     }
 
     /**
@@ -64,6 +87,7 @@ class AfterServerStarted : ApplicationRunner, ApplicationListener<WebServerIniti
      */
     override fun onApplicationEvent(event: WebServerInitializedEvent) {
         serverPort = event.webServer.port
+        start()
     }
 
 }
