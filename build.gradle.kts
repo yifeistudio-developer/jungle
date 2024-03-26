@@ -29,7 +29,11 @@ val spaceVersion = "2.0.1-RELEASE"
 
 dependencies {
 	implementation("com.yifeistudio:space-unit:${spaceVersion}")
-	implementation("com.baomidou:mybatis-plus-boot-starter:${mybatisVersion}")
+	implementation("com.baomidou:mybatis-plus-boot-starter:${mybatisVersion}") {
+		exclude("org.mybatis", "mybatis-spring")
+	}
+	implementation("org.mybatis:mybatis-spring:3.0.3")
+
 	// springboot.
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")

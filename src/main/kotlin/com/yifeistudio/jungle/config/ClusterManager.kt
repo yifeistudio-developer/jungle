@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * - 集群模式启动下则需要启动伙伴关系管理
  */
 @Component
-class ClusterManager : SmartLifecycle, ApplicationListener<WebServerInitializedEvent> {
+internal class ClusterManager : SmartLifecycle, ApplicationListener<WebServerInitializedEvent> {
 
 
     // 服务端口号

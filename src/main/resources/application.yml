@@ -9,6 +9,14 @@ server:
   port: 0
   shutdown: graceful
 
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: is_deleted
+      logic-delete-value: true
+      logic-not-delete-value: false
+
+
 ---
 spring:
   datasource:
@@ -16,10 +24,6 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: jungle
     password: jungle
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
   config:
     activate:
       on-profile: dev
@@ -28,3 +32,4 @@ jungle:
   cluster:
     keep-connected: true
     ip-prefer: 192.168
+

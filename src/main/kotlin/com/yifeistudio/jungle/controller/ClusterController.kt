@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("/cluster")
-class ClusterController {
+internal class ClusterController {
 
     @Resource
     private lateinit var peerService: PeerService

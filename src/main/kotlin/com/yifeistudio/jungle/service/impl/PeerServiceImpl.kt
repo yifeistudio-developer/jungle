@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 伙伴管理服务
  */
 @Service
-class PeerServiceImpl : PeerService {
+internal class PeerServiceImpl : PeerService {
 
     private var localMarker: String = ""
 

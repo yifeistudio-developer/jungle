@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
  * 使用Redis实现节点及用户关系注册中心
  */
 @Component
-class RedisRegistrationManager : RegistrationManager {
+internal class RedisRegistrationManager : RegistrationManager {
 
     @Resource
     private lateinit var redisTemplate: RedisTemplate<String, String>

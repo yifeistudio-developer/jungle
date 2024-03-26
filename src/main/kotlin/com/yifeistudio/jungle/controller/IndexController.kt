@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono
  */
 @RestController
 @RequestMapping
-class IndexController {
+internal class IndexController {
 
 
     /**

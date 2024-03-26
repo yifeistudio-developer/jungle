@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
  * 用户消息
  */
 @Service
-class MessageServiceImpl : MessageService {
+internal class MessageServiceImpl : MessageService {
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
