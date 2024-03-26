@@ -17,7 +17,7 @@ import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAd
  * WebSocket配置
  */
 @Configuration
-class WebSocketConfig {
+internal class WebSocketConfig {
 
     @Resource
     private lateinit var peerService: PeerService

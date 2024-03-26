@@ -10,7 +10,7 @@ import java.time.LocalDateTime
  * 数据字段自动填充
  */
 @Component
-class DataMetaObjectHandler : MetaObjectHandler {
+internal class DataMetaObjectHandler : MetaObjectHandler {
 
     override fun insertFill(metaObject: MetaObject?) {
         strictInsertFill(

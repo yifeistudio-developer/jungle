@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @MapperScan("com.yifeistudio.jungle.mapper")
 @EnableConfigurationProperties(JungleProperties::class)
-class JungleConfig {
+internal class JungleConfig {
 
 }
 ///~
