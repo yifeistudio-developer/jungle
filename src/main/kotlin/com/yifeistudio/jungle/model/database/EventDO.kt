@@ -1,11 +1,15 @@
 package com.yifeistudio.jungle.model.database
 
 import com.baomidou.mybatisplus.annotation.*
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler
+import com.yifeistudio.jungle.model.Event
 import com.yifeistudio.jungle.model.EventOrigin
+import com.yifeistudio.jungle.util.Hashes
+import org.springframework.beans.BeanUtils
 import java.time.LocalDateTime
 
 @TableName("t_event", autoResultMap = true)
-class EventDO {
+class EventDO<T> {
 
     /**
      * 物理主键ID
@@ -26,7 +30,8 @@ class EventDO {
     /**
      * 内容
      */
-    var payload: Any? = null
+    @TableField(typeHandler = JacksonTypeHandler::class)
+    var payload: T? = null
 
     /**
      * 发布时间
@@ -56,4 +61,15 @@ class EventDO {
     @TableLogic
     var isDeleted: Boolean? = null
 
+
+    companion object {
+        fun <T> of(event: Event<T>): EventDO<T> {
+            val data = EventDO<T>()
+            BeanUtils.copyProperties(event, data)
+            if (data.sign == null) {
+                data.sign = Hashes.md5(event.payload ?: "")
+            }
+            return data
+        }
+    }
 }

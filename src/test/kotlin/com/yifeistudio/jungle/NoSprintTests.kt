@@ -1,5 +1,6 @@
 package com.yifeistudio.jungle
 
+import com.yifeistudio.jungle.util.Hashes
 import com.yifeistudio.jungle.util.Networks
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
@@ -33,6 +34,11 @@ class NoSprintTests {
     fun monoTest() {
         Mono.just("abc").doOnNext { println(it) }.then(Mono.just("efg")).doOnNext { println(it) }.then()
         Thread.sleep(50000)
+    }
+
+    @Test
+    fun hashTest() {
+        println(Hashes.md5("abc"))
     }
 
 }

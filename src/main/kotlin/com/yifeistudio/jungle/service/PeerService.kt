@@ -1,14 +1,14 @@
 package com.yifeistudio.jungle.service
 
+import com.yifeistudio.jungle.handler.EnvelopeItemHandler
 import com.yifeistudio.jungle.model.ClusterProfile
 import com.yifeistudio.jungle.model.Message
-import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
 
 /**
  * 伙伴关系管理
  */
-interface PeerService {
+interface PeerService : EnvelopeItemHandler {
 
     /**
      * 启动
@@ -32,10 +32,5 @@ interface PeerService {
      * 转发消息
      */
     fun dispatch(userId: Long, message: Message<Any>)
-
-    /**
-     * 处理伙伴消息
-     */
-    fun handle(session: WebSocketSession)
 
 }

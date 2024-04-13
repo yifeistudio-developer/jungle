@@ -1,9 +1,9 @@
 package com.yifeistudio.jungle.model
 
-import com.yifeistudio.space.unit.util.Bits
+import java.io.Serializable
 import java.time.LocalDateTime
 
-class Message<T> {
+class Message<T> : Serializable {
 
     // 消息ID
     var id: Long? = null
@@ -21,23 +21,12 @@ class Message<T> {
     var attr: Int? = null
 
     // 消息内容
-    var content: T? = null
+    var payload: T? = null
 
     // 发送时间
     var pubTime: LocalDateTime? = null
 
     companion object {
-
-        /**
-         * 连接信息
-         */
-        fun connectMessage(marker: String): Message<String> {
-            val message = Message<String>()
-            message.attr = Bits.add(0, MessageAttr.connect)
-            message.content = marker
-            return message
-        }
-
 
     }
 }

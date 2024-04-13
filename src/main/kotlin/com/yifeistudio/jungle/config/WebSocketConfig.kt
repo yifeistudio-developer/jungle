@@ -1,7 +1,6 @@
 package com.yifeistudio.jungle.config
 
-import com.yifeistudio.jungle.handler.PeerMessageHandler
-import com.yifeistudio.jungle.handler.UserMessageHandler
+import com.yifeistudio.jungle.handler.EnvelopeHandler
 import com.yifeistudio.jungle.service.MessageService
 import com.yifeistudio.jungle.service.PeerService
 import jakarta.annotation.Resource
@@ -33,8 +32,8 @@ internal class WebSocketConfig {
     @Bean
     fun handlerMapping(): HandlerMapping {
         val handlerMap = mapOf(
-            "/user-endpoint/message" to UserMessageHandler(messageService),
-            "/peer-endpoint/message" to PeerMessageHandler(peerService)
+            "/user-endpoint/message" to EnvelopeHandler(messageService),
+            "/peer-endpoint/message" to EnvelopeHandler(peerService)
         )
         return SimpleUrlHandlerMapping(handlerMap, -1)
     }

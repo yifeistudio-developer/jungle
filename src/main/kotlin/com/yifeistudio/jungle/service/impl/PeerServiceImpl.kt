@@ -1,16 +1,18 @@
 package com.yifeistudio.jungle.service.impl
 
 import com.yifeistudio.jungle.adapter.RegistrationManager
-import com.yifeistudio.jungle.model.ClusterProfile
-import com.yifeistudio.jungle.model.Message
+import com.yifeistudio.jungle.mapper.EventMapper
+import com.yifeistudio.jungle.model.*
+import com.yifeistudio.jungle.model.database.EventDO
 import com.yifeistudio.jungle.service.PeerService
+import com.yifeistudio.jungle.util.Hashes
+import com.yifeistudio.space.unit.util.Jsons
 import jakarta.annotation.Resource
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.socket.HandshakeInfo
-import org.springframework.web.reactive.socket.WebSocketMessage
 import org.springframework.web.reactive.socket.WebSocketSession
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
 import reactor.core.publisher.Flux
@@ -28,6 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class PeerServiceImpl : PeerService {
 
     private var localMarker: String = ""
+
+    @Resource
+    private lateinit var eventMapper: EventMapper<String>
 
     val coroutineScope = CoroutineScope(Dispatchers.Default)
 
@@ -70,19 +75,12 @@ internal class PeerServiceImpl : PeerService {
     /**
      * 处理伙伴消息
      */
-    override fun handle(session: WebSocketSession) {
-        val handshakeInfo: HandshakeInfo = session.handshakeInfo
-        logger.info("handle message from ${handshakeInfo.remoteAddress?.address}")
-        session.receive().doOnNext { msg ->
-            // 处理PING 消息
-            if (msg.type == WebSocketMessage.Type.PING) {
-                logger.info("handle ping message.")
-            }
-            // 处理连接消息
-            if (msg.type == WebSocketMessage.Type.TEXT) {
-                logger.info("handle connect message. ${msg.payloadAsText}")
-            }
-        }.subscribe()
+    override fun handle(event: Event<*>) {
+
+    }
+
+    override fun handle(message: Message<*>) {
+
     }
 
     /**
@@ -185,9 +183,11 @@ internal class PeerServiceImpl : PeerService {
     private fun connect(host: String, port: Int) {
         val url = URI("ws://$host:$port/peer-endpoint/message")
         val marker = "$host@$port"
-        client.execute(url) { session ->
+        val httpHeaders = HttpHeaders()
+        httpHeaders.add("control-type", Event::class.simpleName)
+        client.execute(url, httpHeaders) { session ->
             logger.info("connected to $marker succeed!")
-            peerSessionCache[marker] = session
+            onConnected(marker, session)
             Mono.never()
         }.onErrorResume {
             logger.error("connect to $marker failed.")
@@ -195,5 +195,27 @@ internal class PeerServiceImpl : PeerService {
             Mono.empty()
         }.subscribe()
     }
+
+    private fun onConnected(marker: String, session: WebSocketSession) {
+        peerSessionCache[marker] = session
+        val event = Event<String>()
+        event.payload = marker
+        event.sign = Hashes.md5(event.payload!!)
+        eventMapper.insert(EventDO.of(event))
+        val envelope = Envelope.of(event)
+        // publish connect event
+        session.send(Mono.just(session.textMessage(Jsons.stringify(envelope).get()))).subscribe()
+        session.receive().doOnNext {
+            val payloadAsText = it.payloadAsText
+            val rawEvp = Jsons.parse(payloadAsText, Envelope::class.java).get()
+            if (rawEvp.type == EnvelopeType.EVENT) {
+
+            }
+            if (rawEvp.type == EnvelopeType.MESSAGE) {
+
+            }
+        }.subscribe()
+    }
+
 }
 ///～

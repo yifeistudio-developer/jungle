@@ -1,12 +1,13 @@
 package com.yifeistudio.jungle.service.impl
 
+import com.yifeistudio.jungle.model.Event
+import com.yifeistudio.jungle.model.Message
 import com.yifeistudio.jungle.service.MessageService
 import com.yifeistudio.jungle.service.PeerService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.socket.WebSocketSession
-import reactor.core.publisher.Mono
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -32,14 +33,12 @@ internal class MessageServiceImpl : MessageService {
     /**
      * 处理用户消息
      */
-    override fun handle(session: WebSocketSession): Mono<Void> {
-        // 这里可以携带用户信息
-        val attributes = session.attributes
-        return session.receive().doOnNext { msg ->
-            val payloadAsText = msg.payloadAsText
-            logger.info("handle chat message: $payloadAsText, $attributes")
-            // do next
-        }.then()
+    override fun handle(event: Message<*>) {
+
+    }
+
+    override fun handle(event: Event<*>) {
+        TODO("Not yet implemented")
     }
 
 }

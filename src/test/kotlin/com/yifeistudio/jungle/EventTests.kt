@@ -1,7 +1,9 @@
 package com.yifeistudio.jungle
 
 import com.yifeistudio.jungle.mapper.EventMapper
+import com.yifeistudio.jungle.model.ClusterProfile
 import com.yifeistudio.jungle.model.database.EventDO
+import com.yifeistudio.space.unit.util.Jsons
 import jakarta.annotation.Resource
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
 class EventTests {
 
     @Resource
-    private lateinit var eventMapper: EventMapper
+    private lateinit var eventMapper: EventMapper<ClusterProfile>
 
     @Test
     fun contextLoads() {
@@ -22,15 +24,16 @@ class EventTests {
 
     @Test
     fun insertTest() {
-        val event = EventDO()
-        event.sign = "xxx"
+        val event = EventDO<ClusterProfile>()
+        event.sign = "xxxxxxxxx"
+        event.payload = ClusterProfile(1)
         eventMapper.insert(event)
     }
 
     @Test
     fun selectTest() {
-        val selectById = eventMapper.selectById(2)
-        println(selectById)
+        val selectById = eventMapper.selectById(5)
+        println(Jsons.stringify(selectById.payload).get())
     }
 
     @Test
