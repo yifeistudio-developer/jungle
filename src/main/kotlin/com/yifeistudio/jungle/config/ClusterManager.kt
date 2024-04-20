@@ -26,14 +26,14 @@ internal class ClusterManager : SmartLifecycle, ApplicationListener<WebServerIni
     // 服务端口号
     private var serverPort: Int = 0
 
-    // 状态
-    private val isRunning: AtomicBoolean = AtomicBoolean(false)
-
     @Resource
     private lateinit var peerMessageService: PeerService
 
     @Resource
     private lateinit var jungleProperties: JungleProperties
+
+    // 状态
+    private val isRunning: AtomicBoolean = AtomicBoolean(false)
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
