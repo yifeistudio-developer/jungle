@@ -5,6 +5,10 @@ spring:
     default: dev
   lifecycle:
     timeout-per-shutdown-phase: 30s
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${nacos.config.server-addr}
 server:
   port: 9000
   shutdown: graceful
@@ -15,8 +19,17 @@ mybatis-plus:
       logic-delete-field: is_deleted
       logic-delete-value: true
       logic-not-delete-value: false
+nacos:
+  config:
+    server-addr: localhost:8848
 
-
+grpc:
+  server:
+    port: 0
+    enable-keep-alive: true
+  client:
+    alps:
+      negotiation-type: PLAINTEXT
 ---
 spring:
   datasource:

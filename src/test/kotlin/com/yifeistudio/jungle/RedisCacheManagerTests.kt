@@ -1,6 +1,6 @@
 package com.yifeistudio.jungle
 
-import com.yifeistudio.jungle.adapter.impl.RedisRegistrationManager
+import com.yifeistudio.jungle.adapter.impl.RedisCacheManager
 import com.yifeistudio.space.unit.util.Jsons
 import jakarta.annotation.Resource
 import org.junit.jupiter.api.Test
@@ -13,13 +13,13 @@ import org.springframework.data.redis.core.RedisTemplate
  * Redis 测试
  */
 @SpringBootTest
-class RedisRegistrationManagerTests {
+class RedisCacheManagerTests {
 
     @Resource
     private lateinit var redisTemplate: RedisTemplate<String, String>
 
     @Resource
-    private lateinit var redisRegistrationManager: RedisRegistrationManager
+    private lateinit var redisRegistrationManager: RedisCacheManager
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
