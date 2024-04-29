@@ -1,14 +1,29 @@
 package com.yifeistudio.jungle.adapter.impl
 
+import com.alibaba.nacos.api.annotation.NacosInjected
+import com.alibaba.nacos.api.naming.NamingService
 import com.yifeistudio.jungle.adapter.RegistrationManager
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
+
+@Component
 class NacosRegistrationManager : RegistrationManager {
+
+    @Value("\${spring.application.name}")
+    private lateinit var applicationName: String
+
+    @NacosInjected
+    private lateinit var namingService: NamingService
+
 
     /**
      * 获取所有伙伴信息
      */
     override fun peers(): Set<String> {
-        TODO("Not yet implemented")
+        val allInstances = namingService.getAllInstances(applicationName)
+        println(allInstances)
+        return emptySet()
     }
 
     /**
