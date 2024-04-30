@@ -6,7 +6,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s
 server:
-  port: 9000
+  port: 0
   shutdown: graceful
 
 mybatis-plus:

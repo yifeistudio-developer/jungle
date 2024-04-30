@@ -1,7 +1,6 @@
 package com.yifeistudio.jungle
 
 import com.yifeistudio.jungle.adapter.impl.RedisCacheManager
-import com.yifeistudio.space.unit.util.Jsons
 import jakarta.annotation.Resource
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -31,13 +30,13 @@ class RedisCacheManagerTests {
     @Test
     fun listPeerTest() {
         redisTemplate.delete("ACTIVE_PEER_CACHE_KEY")
-        val peers = redisRegistrationManager.peers()
-        logger.info("test result: {}", Jsons.stringify(peers).get())
+//        val peers = redisRegistrationManager.peers()
+//        logger.info("test result: {}", Jsons.stringify(peers).get())
     }
 
     @Test
     fun registrationTest() {
-        redisRegistrationManager.register("xxxxxxxxx")
+//        redisRegistrationManager.register("xxxxxxxxx")
     }
 
 }

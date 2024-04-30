@@ -1,5 +1,6 @@
 package com.yifeistudio.jungle
 
+import com.yifeistudio.jungle.adapter.RegistrationManager
 import com.yifeistudio.jungle.service.PeerService
 import jakarta.annotation.Resource
 import org.junit.jupiter.api.Test
@@ -13,22 +14,18 @@ class PeerServiceTests {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     @Resource
+    private lateinit var registrationManager: RegistrationManager
+
+    @Resource
     private lateinit var peerService: PeerService
 
     @Test
     fun contextLoads() {
     }
 
-
-    /**
-     * 连接伙伴测试
-     */
     @Test
-    fun connectTest() {
-
-//        doOnError {
-//            logger.error("handler connect error: ${it.message}")
-//        }.block()
-
+    fun peersTest() {
+        val peers = registrationManager.peers()
+        println(peers)
     }
 }

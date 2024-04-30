@@ -104,7 +104,6 @@ internal class PeerServiceImpl : PeerService {
             }
         }
         this.localMarker = marker
-        registrationManager.register(localMarker)
         return Mono.empty()
     }
 
@@ -125,10 +124,6 @@ internal class PeerServiceImpl : PeerService {
     override fun stop() {
         if (!state.get()) {
             return
-        }
-        // 自我注销
-        if (localMarker != "") {
-            registrationManager.deregister(localMarker)
         }
         // 停止保活协程
         if (coroutineScope.isActive) {
@@ -191,7 +186,6 @@ internal class PeerServiceImpl : PeerService {
             Mono.never()
         }.onErrorResume {
             logger.error("connect to $marker failed.")
-            registrationManager.deregister("$host@$port")
             Mono.empty()
         }.subscribe()
     }

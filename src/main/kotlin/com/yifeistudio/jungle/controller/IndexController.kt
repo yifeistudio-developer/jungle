@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono
 @RequestMapping
 internal class IndexController {
 
-
     /**
      * 健康检查
      */
