@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.stereotype.Component
 
-
+/**
+ * Nacos 注册管理
+ */
 @Component
 class NacosRegistrationManager : RegistrationManager {
 
@@ -24,12 +26,12 @@ class NacosRegistrationManager : RegistrationManager {
     /**
      * 获取所有伙伴信息
      */
-    override fun peers(): Set<String> {
+    override fun peers(): Set<Peer> {
         val allInstances = discoveryClient.getInstances(applicationName)
         val ip = nacosDiscoveryProperties.ip
         val port = nacosDiscoveryProperties.port
-        println(Peer(ip, port))
-        return emptySet()
+        val local = Peer(ip, port)
+        return allInstances.map { v -> Peer(v.host, v.port) }.filter { v -> v != local }.toSet()
     }
 
 }

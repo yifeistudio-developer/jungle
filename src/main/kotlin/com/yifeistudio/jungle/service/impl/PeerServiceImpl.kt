@@ -32,7 +32,7 @@ internal class PeerServiceImpl : PeerService {
     private var localMarker: String = ""
 
     @Resource
-    private lateinit var eventMapper: EventMapper<String>
+    private lateinit var eventMapper: EventMapper<Peer>
 
     val coroutineScope = CoroutineScope(Dispatchers.Default)
 
@@ -56,7 +56,7 @@ internal class PeerServiceImpl : PeerService {
     /**
      * 伙伴关系缓存
      */
-    private val peerSessionCache: MutableMap<String, WebSocketSession> = ConcurrentHashMap()
+    private val peerSessionCache: MutableMap<Peer, WebSocketSession> = ConcurrentHashMap()
 
 
     /**
@@ -163,37 +163,35 @@ internal class PeerServiceImpl : PeerService {
         }
         val remotePeers = registrationManager.peers()
         val localPeers = peerSessionCache.keys
-        val newPeers = remotePeers.filter { !localPeers.contains(it) && it != localMarker }
+        val newPeers = remotePeers.filter { !localPeers.contains(it) }
         // 与新伙伴建立连接
         newPeers.forEach {
             logger.info("detected new peer: $it try to connect to it")
-            val trips = it.split("@")
-            connect(trips[0], trips[1].toInt())
+            connect(peer = it)
         }
     }
 
     /**
      * 连接伙伴
      */
-    private fun connect(host: String, port: Int) {
-        val url = URI("ws://$host:$port/peer-endpoint/message")
-        val marker = "$host@$port"
+    private fun connect(peer: Peer) {
+        val url = URI("ws://${peer.ip}:${peer.port}/peer-endpoint/message")
         val httpHeaders = HttpHeaders()
         httpHeaders.add("control-type", Event::class.simpleName)
         client.execute(url, httpHeaders) { session ->
-            logger.info("connected to $marker succeed!")
-            onConnected(marker, session)
+            logger.info("connected to $peer succeed!")
+            onConnected(peer, session)
             Mono.never()
         }.onErrorResume {
-            logger.error("connect to $marker failed.")
+            logger.error("connect to $peer failed.")
             Mono.empty()
         }.subscribe()
     }
 
-    private fun onConnected(marker: String, session: WebSocketSession) {
-        peerSessionCache[marker] = session
-        val event = Event<String>()
-        event.payload = marker
+    private fun onConnected(peer: Peer, session: WebSocketSession) {
+        peerSessionCache[peer] = session
+        val event = Event<Peer>()
+        event.payload = peer
         event.sign = Hashes.md5(event.payload!!)
         eventMapper.insert(EventDO.of(event))
         val envelope = Envelope.of(event)
