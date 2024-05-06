@@ -7,6 +7,7 @@ import jakarta.annotation.Resource
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
 
 /**
  * Nacos 注册管理
@@ -26,12 +27,14 @@ class NacosRegistrationManager : RegistrationManager {
     /**
      * 获取所有伙伴信息
      */
-    override fun peers(): Set<Peer> {
-        val allInstances = discoveryClient.getInstances(applicationName)
-        val ip = nacosDiscoveryProperties.ip
-        val port = nacosDiscoveryProperties.port
-        val local = Peer(ip, port)
-        return allInstances.map { v -> Peer(v.host, v.port) }.filter { v -> v != local }.toSet()
+    override fun peers(): Mono<Set<Peer>> {
+        return Mono.fromCallable {
+            val allInstances = discoveryClient.getInstances(applicationName)
+            val ip = nacosDiscoveryProperties.ip
+            val port = nacosDiscoveryProperties.port
+            val local = Peer(ip, port)
+            allInstances.map { v -> Peer(v.host, v.port) }.filter { v -> v != local }.toSet()
+        }
     }
 
 }

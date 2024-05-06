@@ -112,7 +112,7 @@ internal class PeerServiceImpl : PeerService {
      * 获取当前集群概览信息
      */
     override fun profile(): ClusterProfile {
-        return ClusterProfile(registrationManager.peers().size)
+        TODO()
     }
 
     /**
@@ -162,13 +162,11 @@ internal class PeerServiceImpl : PeerService {
             }
         }
         val remotePeers = registrationManager.peers()
-        val localPeers = peerSessionCache.keys
-        val newPeers = remotePeers.filter { !localPeers.contains(it) }
-        // 与新伙伴建立连接
-        newPeers.forEach {
+        val localPeers: Set<Peer> = peerSessionCache.keys
+        remotePeers.flatMapIterable { it }.filter { !localPeers.contains(it) }.doOnNext {
             logger.info("detected new peer: $it try to connect to it")
             connect(peer = it)
-        }
+        }.subscribe()
     }
 
     /**

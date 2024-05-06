@@ -31,8 +31,7 @@ internal class ClusterController {
 
     @GetMapping("/peers")
     fun peers(): Mono<Set<Peer>> {
-        val peers = registrationManager.peers()
-        return Mono.just(peers)
+        return registrationManager.peers()
     }
 
 }

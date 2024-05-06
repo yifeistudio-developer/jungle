@@ -1,6 +1,7 @@
 package com.yifeistudio.jungle.adapter
 
 import com.yifeistudio.jungle.model.Peer
+import reactor.core.publisher.Mono
 
 
 /**
@@ -11,7 +12,7 @@ interface RegistrationManager {
     /**
      * 获取所有伙伴信息
      */
-    fun peers(): Set<Peer>
+    fun peers(): Mono<Set<Peer>>
 
 }
 ///~

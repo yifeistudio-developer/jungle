@@ -25,7 +25,7 @@ class PeerServiceTests {
 
     @Test
     fun peersTest() {
-        val peers = registrationManager.peers()
+        val peers = registrationManager.peers().block()
         println(peers)
     }
 }
