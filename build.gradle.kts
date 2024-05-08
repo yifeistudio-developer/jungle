@@ -27,7 +27,7 @@ repositories {
 }
 
 val mybatisVersion = "3.5.5"
-val spaceVersion = "2.0.1-RELEASE"
+val spaceVersion = "2.0.3-RELEASE"
 
 dependencies {
 

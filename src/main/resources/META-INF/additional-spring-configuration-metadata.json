@@ -5,12 +5,6 @@
       "type": "java.lang.Boolean",
       "defaultValue": true,
       "description": "是否保持与伙伴连接."
-    },
-    {
-      "name": "jungle.cluster.ip-prefer",
-      "type": "java.lang.String",
-      "defaultValue": "",
-      "description": "服务IP亲和."
     }
   ]
 }

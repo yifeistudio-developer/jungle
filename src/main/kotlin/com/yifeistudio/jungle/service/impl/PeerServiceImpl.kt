@@ -11,7 +11,6 @@ import jakarta.annotation.Resource
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.socket.WebSocketSession
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
@@ -174,14 +173,12 @@ internal class PeerServiceImpl : PeerService {
      */
     private fun connect(peer: Peer) {
         val url = URI("ws://${peer.ip}:${peer.port}/peer-endpoint/message")
-        val httpHeaders = HttpHeaders()
-        httpHeaders.add("control-type", Event::class.simpleName)
-        client.execute(url, httpHeaders) { session ->
+        client.execute(url) { session ->
             logger.info("connected to $peer succeed!")
             onConnected(peer, session)
             Mono.never()
         }.onErrorResume {
-            logger.error("connect to $peer failed.")
+            logger.error("connect to $peer failed.", it)
             Mono.empty()
         }.subscribe()
     }
@@ -194,18 +191,14 @@ internal class PeerServiceImpl : PeerService {
         eventMapper.insert(EventDO.of(event))
         val envelope = Envelope.of(event)
         // publish connect event
-        session.send(Mono.just(session.textMessage(Jsons.stringify(envelope).get()))).subscribe()
+        val payload = Jsons.stringify(envelope).get()
+        val textMessage = session.textMessage(payload)
+        session.send(Mono.just(textMessage)).subscribe()
         session.receive().doOnNext {
             val payloadAsText = it.payloadAsText
             val rawEvp = Jsons.parse(payloadAsText, Envelope::class.java).get()
-            if (rawEvp.type == EnvelopeType.EVENT) {
 
-            }
-            if (rawEvp.type == EnvelopeType.MESSAGE) {
-
-            }
         }.subscribe()
     }
-
 }
 ///～
